@@ -2,6 +2,8 @@ import pandas as pd
 # pyrefly: ignore [missing-import]
 import yfinance as yf
 import time
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy import text
@@ -27,7 +29,7 @@ start_date_yf = unix_to_date(period1)
 end_date_yf = unix_to_date(period2)
 
 # Read trackers.csv
-file_path = '/Users/amitrathore/Desktop/market/trackers.csv'
+file_path = '../trackers.csv'
 symbols_df = pd.read_csv(file_path)
 trackers = symbols_df[['Symbol', 'Type']].to_dict(orient='records')
 
@@ -83,11 +85,15 @@ combined_data = pd.concat(data_frames, ignore_index=True)
 
 print("Data fetched. Proceeding to save to MySQL.")
 
+# Load environment variables from root .env
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(env_path)
+
 # Connect to MySQL Database
-DB_HOST = "localhost"
-DB_USER = "root"
-DB_PASSWORD = "16012005"
-DB_PORT = "3306"
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PORT = os.getenv("DB_PORT")
 
 # Create a connection engine without a specific database to create the database if it doesn't exist
 engine_creation = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/")

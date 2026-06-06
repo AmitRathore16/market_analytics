@@ -2,8 +2,6 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 const express = require('express');
 const cors = require('cors');
 const aiService = require('./aiService');
-const { exec } = require('child_process');
-const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -24,20 +22,39 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-app.post('/api/refresh-data', (req, res) => {
-    // Determine path to the python virtual environment and script
-    const pythonExecutable = path.resolve(__dirname, '../data_pipeline/venv/bin/python');
-    const scriptPath = path.resolve(__dirname, '../data_pipeline/fetch_data.py');
-    const cwdPath = path.resolve(__dirname, '../data_pipeline');
-
-    // Run the python script
-    exec(`"${pythonExecutable}" "${scriptPath}"`, { cwd: cwdPath }, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Exec error: ${error}`);
-            return res.status(500).json({ error: 'Failed to refresh data pipeline', details: stderr || error.message });
+app.post('/api/refresh-data', async (req, res) => {
+    try {
+        const token = process.env.GITHUB_PAT;
+        if (!token) {
+            return res.status(500).json({ error: "Missing GITHUB_PAT environment variable." });
         }
-        res.json({ success: true, message: 'Data pipeline completed successfully', output: stdout });
-    });
+
+        const owner = "AmitRathore16";
+        const repo = "market_analytics";
+        const workflow_id = "market_pipeline.yml";
+
+        const ghRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow_id}/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'Authorization': `token ${token}`
+            },
+            body: JSON.stringify({
+                ref: 'main'
+            })
+        });
+
+        if (!ghRes.ok) {
+            const errorText = await ghRes.text();
+            console.error(`GitHub API error: ${ghRes.status} ${errorText}`);
+            return res.status(500).json({ error: "Failed to trigger pipeline", details: errorText });
+        }
+
+        res.json({ success: true, message: 'Pipeline triggered on GitHub Actions. Data will be updated shortly.' });
+    } catch (error) {
+        console.error("Refresh Data API Error:", error);
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
 });
 
 module.exports = app;

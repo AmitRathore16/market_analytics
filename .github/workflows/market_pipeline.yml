@@ -1,0 +1,57 @@
+name: Market Data Pipeline
+
+on:
+  schedule:
+    # Run at midnight UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub UI
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Validate environment variables
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        # Assuming DB_NAME is used or needed, though your script uses DB_HOST to construct connection strings
+        DB_NAME: ${{ secrets.DB_NAME }} 
+      run: |
+        if [ -z "$DB_HOST" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_PORT" ]; then
+          echo "Error: One or more Database Secrets are missing!"
+          echo "Please ensure DB_HOST, DB_USER, DB_PASSWORD, and DB_PORT are set in GitHub Repository Secrets."
+          exit 1
+        fi
+        echo "All required Database Secrets are present."
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        cd data_pipeline
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run fetch_data.py
+      env:
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: |
+        cd data_pipeline
+        # Fail loudly if the python script fails
+        set -e
+        python fetch_data.py

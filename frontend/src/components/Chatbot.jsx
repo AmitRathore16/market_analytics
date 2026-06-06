@@ -30,7 +30,7 @@ const Chatbot = ({ theme, toggleTheme }) => {
     setIsRefreshing(true);
     try {
       setMessages(prev => [...prev, { role: 'ai', content: '⏳ Refreshing data from market... this may take a minute.' }]);
-      const res = await axios.post('http://localhost:5001/api/refresh-data');
+      const res = await axios.post('/api/refresh-data');
       if (res.data.success) {
         setMessages(prev => [...prev, { role: 'ai', content: '✅ Data pipeline completed successfully. The database is now up to date!' }]);
       }
@@ -52,7 +52,7 @@ const Chatbot = ({ theme, toggleTheme }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5001/api/chat', {
+      const response = await axios.post('/api/chat', {
         message: userMessage,
         history: messages
       });

@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post('/chat', async (req, res) => {
+app.post('/api/chat', async (req, res) => {
     try {
         const { message, history } = req.body;
         if (!message) {
@@ -24,7 +24,7 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-app.post('/refresh-data', (req, res) => {
+app.post('/api/refresh-data', (req, res) => {
     // Determine path to the python virtual environment and script
     const pythonExecutable = path.resolve(__dirname, '../data_pipeline/venv/bin/python');
     const scriptPath = path.resolve(__dirname, '../data_pipeline/fetch_data.py');

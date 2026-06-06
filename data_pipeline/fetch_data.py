@@ -83,6 +83,11 @@ if len(data_frames) == 0:
     raise Exception("No data downloaded. Check symbols or internet connection.")
 combined_data = pd.concat(data_frames, ignore_index=True)
 
+# Save dataset as CSV in root folder
+csv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dataset.csv')
+combined_data.to_csv(csv_path, index=False)
+print(f"Dataset saved to {csv_path}")
+
 print("Data fetched. Proceeding to save to MySQL.")
 
 # Load environment variables from root .env

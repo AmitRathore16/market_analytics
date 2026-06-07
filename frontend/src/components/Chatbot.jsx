@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Moon, Sun, PlusCircle, Database, RefreshCw } from 'lucide-react';
+import { Send, Moon, Sun, PlusCircle, Database } from 'lucide-react';
 import axios from 'axios';
 
 const Chatbot = ({ theme, toggleTheme }) => {
@@ -8,7 +8,6 @@ const Chatbot = ({ theme, toggleTheme }) => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -25,22 +24,7 @@ const Chatbot = ({ theme, toggleTheme }) => {
     ]);
   };
 
-  const handleRefreshData = async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      setMessages(prev => [...prev, { role: 'ai', content: '⏳ Refreshing data from market... this may take a minute.' }]);
-      const res = await axios.post('/api/refresh-data');
-      if (res.data.success) {
-        setMessages(prev => [...prev, { role: 'ai', content: '✅ Data pipeline completed successfully. The database is now up to date!' }]);
-      }
-    } catch (error) {
-      console.error("Refresh error:", error);
-      setMessages(prev => [...prev, { role: 'ai', content: '❌ Failed to refresh data pipeline. Please check backend logs.' }]);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -93,9 +77,6 @@ const Chatbot = ({ theme, toggleTheme }) => {
       <div className="chat-header">
         <h2>Data Assistant</h2>
         <div className="header-actions">
-          <button onClick={handleRefreshData} className="icon-button" title="Refresh Data" disabled={isRefreshing}>
-            <RefreshCw size={20} className={isRefreshing ? 'spinning' : ''} />
-          </button>
           <button onClick={handleNewChat} className="icon-button" title="New Chat">
             <PlusCircle size={20} />
           </button>

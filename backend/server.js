@@ -4,8 +4,6 @@ require("dotenv").config({
 const express = require("express");
 const cors = require("cors");
 const aiService = require("./aiService");
-const { exec } = require("child_process");
-const path = require("path");
 
 const app = express();
 app.use(cors());
@@ -28,21 +26,7 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-app.post("/api/refresh-data", (req, res) => {
-  // Determine path to the python virtual environment and script
-  const pythonExecutable = path.resolve(__dirname, "../data_pipeline/venv/bin/python");
-  const scriptPath = path.resolve(__dirname, "../data_pipeline/fetch_data.py");
-  const cwdPath = path.resolve(__dirname, "../data_pipeline");
 
-  // Run the python script
-  exec(`"${pythonExecutable}" "${scriptPath}"`, { cwd: cwdPath }, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Exec error: ${error}`);
-      return res.status(500).json({ error: 'Failed to refresh data pipeline', details: stderr || error.message });
-    }
-    res.json({ success: true, message: 'Data pipeline completed successfully', output: stdout });
-  });
-});
 
 const PORT = process.env.PORT || 5001;
 

@@ -29,7 +29,7 @@ start_date_yf = unix_to_date(period1)
 end_date_yf = unix_to_date(period2)
 
 # Read trackers.csv
-file_path = '../trackers.csv'
+file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'trackers.csv')
 symbols_df = pd.read_csv(file_path)
 trackers = symbols_df[['Symbol', 'Type']].to_dict(orient='records')
 
@@ -99,17 +99,60 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME", "market_db")
 
 # Create a connection engine without a specific database to create the database if it doesn't exist
 engine_creation = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/")
 with engine_creation.connect() as conn:
-    conn.execute(text("CREATE DATABASE IF NOT EXISTS market_db"))
+    conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}"))
 
-# Create engine for the market_db
-engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/market_db")
+# Create engine for the database
+engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # Save to database
-combined_data.to_sql('market_data', con=engine, if_exists='replace', index=False)
-symbols_df.to_sql('trackers', con=engine, if_exists='replace', index=False)
+# Insert data
+# Remove old data but keep table structure
+with engine.begin() as conn:
 
-print("Data saved to database `market_db` successfully.")
+    conn.execute(text("""
+    CREATE TABLE IF NOT EXISTS market_data (
+        Symbol VARCHAR(200) NOT NULL,
+        Type VARCHAR(200),
+        Date DATETIME NOT NULL,
+        Open DOUBLE DEFAULT NULL,
+        High DOUBLE DEFAULT NULL,
+        Low DOUBLE DEFAULT NULL,
+        Close DOUBLE DEFAULT NULL,
+        `Adj Close` DOUBLE DEFAULT NULL,
+        Volume BIGINT DEFAULT NULL,
+        PRIMARY KEY (Symbol, Date)
+    )
+    """))
+
+    conn.execute(text("""
+    CREATE TABLE IF NOT EXISTS trackers (
+        Symbol VARCHAR(200) PRIMARY KEY,
+        Type TEXT,
+        Logo TEXT
+    )
+    """))
+
+    conn.execute(text("TRUNCATE TABLE market_data"))
+    conn.execute(text("TRUNCATE TABLE trackers"))
+
+# Insert fresh data
+combined_data.to_sql(
+    'market_data',
+    con=engine,
+    if_exists='append',
+    index=False
+)
+
+symbols_df.to_sql(
+    'trackers',
+    con=engine,
+    if_exists='append',
+    index=False
+)
+
+print(f"Data saved to database `{DB_NAME}` successfully.")

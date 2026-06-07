@@ -1,4 +1,4 @@
-# 📈 AI-Powered Financial Market Analytics Platform | Python, MySQL, PySpark, Power BI & Groq LLM
+# 📈 Market Analytics Platform | Python, MySQL, PySpark, Power BI & Groq LLM
 
 <p align="center">
   <b>Real-Time Market Intelligence Platform for Stocks, Cryptocurrencies & ETFs</b>
@@ -48,7 +48,7 @@ The project was built to solve real-world financial analytics challenges by prov
 
 ## Database
 
-* MySQL
+* MySQL (Hosted on **Aiven Cloud**)
 
 ## Big Data Processing
 
@@ -75,6 +75,14 @@ The project was built to solve real-world financial analytics challenges by prov
 
 * JavaScript
 
+## Deployment
+
+* Vercel (Web Application)
+
+## Automation
+
+* GitHub Actions (Scheduled Database Refresh)
+
 ## Version Control
 
 * Git
@@ -91,13 +99,75 @@ The project follows an automated analytics workflow:
 1. Python fetches latest market data from Yahoo Finance.
 2. Data is stored in CSV files.
 3. Python automatically creates MySQL tables.
-4. Data is loaded into MySQL.
+4. Data is loaded into the Aiven-hosted MySQL database.
 5. PySpark performs large-scale analytical transformations.
 6. Power BI connects directly to Python-generated datasets.
 7. Dashboard refresh automatically pulls latest market data.
 8. Groq LLM interacts with database metadata.
 9. User questions are converted into SQL queries.
 10. Query results are returned as insights, trends, and forensic analysis.
+
+---
+
+# ☁️ Cloud Database — Aiven
+
+The MySQL database is hosted on Aiven, a fully managed open-source cloud database platform. This enables:
+
+* Secure remote connectivity from the web app, Power BI, Python pipeline, and GitHub Actions
+* High availability with automated backups
+* Easy scalability for large financial datasets
+* SSL-encrypted connections for data security
+
+---
+
+# ⏰ Automated Database Refresh — GitHub Actions
+
+The database refresh pipeline is **fully automated using GitHub Actions**, ensuring market data stays up-to-date without any manual intervention.
+
+### How It Works
+
+* A scheduled GitHub Actions workflow runs at defined intervals (e.g., daily on market close).
+* The workflow triggers the Python data pipeline automatically.
+* Python fetches the latest market data from Yahoo Finance.
+* Fresh records are inserted into the Aiven-hosted MySQL database.
+* Power BI dashboards pick up the updated data on the next refresh.
+
+### Benefits
+
+* Zero manual intervention required
+* Always up-to-date market data
+* Reliable scheduling with full execution logs
+* Runs entirely in the cloud — no local machine needed
+
+```yaml
+# .github/workflows/refresh.yml (example)
+name: Scheduled Market Data Refresh
+
+on:
+  schedule:
+    - cron: '0 18 * * 1-5'  # Runs at 6 PM UTC, Mon–Fri
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run data pipeline
+        run: python pipeline.py
+        env:
+          AIVEN_HOST: ${{ secrets.AIVEN_HOST }}
+          AIVEN_PORT: ${{ secrets.AIVEN_PORT }}
+          AIVEN_USER: ${{ secrets.AIVEN_USER }}
+          AIVEN_PASSWORD: ${{ secrets.AIVEN_PASSWORD }}
+```
+
+> Database credentials are stored securely as **GitHub Secrets** and never exposed in the codebase.
 
 ---
 
@@ -253,7 +323,7 @@ One of the core features of the platform is the integrated AI Assistant powered 
 * Show top gainers and losers.
 * Identify unusual market movements.
 
-The assistant automatically generates SQL queries, executes them against MySQL, and explains the results in plain English.
+The assistant automatically generates SQL queries, executes them against the Aiven-hosted MySQL database, and explains the results in plain English.
 
 ---
 
@@ -523,7 +593,7 @@ groupBy("Sector")
 
 # 🚀 Power BI Integration
 
-Power BI is connected directly to Python-generated datasets.
+Power BI is connected directly to Python-generated datasets and the Aiven-hosted MySQL database.
 
 When Power BI refreshes:
 
@@ -542,11 +612,13 @@ An interactive web application was built on top of the analytics platform, bring
 
 ## 🖥️ Website
 
-The web app displays live market charts and asset data across Stocks, Crypto, and ETFs — powered by a Flask backend connected to the same MySQL database.
+The web app displays live market charts and asset data across Stocks, Crypto, and ETFs — powered by a Flask backend connected to the Aiven-hosted MySQL database.
+
+🔗 **Live Demo: [View on Vercel](https://your-project.vercel.app)**
 
 ## 🤖 Groq LLM Chatbot
 
-Users can type any market-related question in plain English. The Groq LLM converts it to SQL, executes it on the database, and returns the result along with the query used — making the data fully conversational.
+Users can type any market-related question in plain English. The Groq LLM converts it to SQL, executes it on the Aiven database, and returns the result along with the query used — making the data fully conversational.
 
 ## 🎥 Demo Video
 
@@ -562,7 +634,8 @@ Watch the full platform walkthrough including the web dashboard and AI assistant
 
 * Real-Time Financial Data Pipeline
 * Automated Yahoo Finance Integration
-* MySQL Data Warehouse
+* MySQL Data Warehouse on Aiven Cloud
+* Scheduled Database Refresh via GitHub Actions
 * Advanced SQL Analytics
 * PySpark Transformations
 * Interactive Power BI Dashboards
@@ -571,6 +644,7 @@ Watch the full platform walkthrough including the web dashboard and AI assistant
 * Natural Language to SQL Engine
 * Financial Forensics & Trend Discovery
 * Stocks, Crypto & ETF Analytics
+* Live Web Application Deployed on Vercel
 * End-to-End Data Engineering Workflow
 
 ---
